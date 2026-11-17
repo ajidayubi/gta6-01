@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunset City</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background: #111; color: #fff; }
+        #game-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; }
+        .hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .hud-group { display: flex; gap: 15px; background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 8px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+        .hud-item { font-weight: bold; font-size: 16px; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        #hud-health { color: #ff4757; }
+        #hud-cash { color: #2ed573; }
+        #hud-wanted { color: #ffa502; letter-spacing: 2px; }
+        .star { opacity: 0.3; }
+        .star.active { opacity: 1; text-shadow: 0 0 8px #ffa502; }
+        .hud-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+        #hud-objective-box { background: rgba(0,0,0,0.7); padding: 12px 18px; border-radius: 8px; max-width: 350px; border-left: 4px solid #3742fa; }
+        #hud-objective-title { font-size: 12px; text-transform: uppercase; color: #70a1ff; margin-bottom: 4px; letter-spacing: 1px; }
+        #hud-objective { font-size: 14px; line-height: 1.3; }
+        #hud-message { position: absolute; top: 25%; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9); text-align: center; opacity: 0; transition: opacity 0.3s ease; }
+        .hud-right-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+        #minimap-container { width: 180px; height: 180px; border-radius: 50%; overflow: hidden; border: 3px solid rgba(255,255,255,0.3); background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); position: relative; }
+        #hud-minimap { width: 100%; height: 100%; display: block; }
+        #hud-speed { background: rgba(0,0,0,0.6); padding: 8px 14px; border-radius: 6px; font-family: monospace; font-size: 18px; color: #ffa502; }
+        
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: linear-gradient(135deg, #1e1b4b 0%, #31102b 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
+        #start-screen h1 { font-size: 4rem; font-weight: 900; background: linear-gradient(to right, #ff4757, #ffa502, #ff6b81); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 10px 30px rgba(255,71,87,0.3); }
+        #start-screen p.subtitle { font-size: 1.2rem; color: #a4b0be; margin-bottom: 30px; letter-spacing: 1px; }
+        .instructions { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 20px 30px; border-radius: 12px; margin-bottom: 30px; max-width: 500px; text-align: left; backdrop-filter: blur(10px); }
+        .instructions h3 { color: #ffa502; margin-bottom: 10px; font-size: 1.1rem; }
+        .instructions ul { list-style-type: none; display: flex; flex-direction: column; gap: 8px; color: #dfe4ea; font-size: 0.95rem; }
+        .instructions li span { color: #ff4757; font-weight: bold; font-family: monospace; }
+        #start-button { background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%); color: white; border: none; padding: 16px 48px; font-size: 1.3rem; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 8px 25px rgba(255,71,87,0.4); transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 1px; }
+        #start-button:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,71,87,0.6); }
+        #start-button:active { transform: translateY(1px); }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./vendor/three.min.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="game-container"></div>
+    
+    <div id="start-screen">
+        <h1>Sunset City</h1>
+        <p class="subtitle">A Sun-Soaked Open-World Crime Adventure</p>
+        <div class="instructions">
+            <h3>How to Play</h3>
+            <ul>
+                <li><span>WASD / Arrows</span>: Move on foot</li>
+                <li><span>SHIFT</span>: Run sprint</li>
+                <li><span>SPACE</span>: Jump</li>
+                <li><span>MOUSE DRAG</span>: Orbit camera</li>
+                <li><span>E</span>: Interact / Enter vehicles</li>
+            </ul>
+        </div>
+        <button id="start-button">Start Game</button>
+    </div>
+
+    <div id="hud">
+        <div class="hud-top">
+            <div class="hud-group">
+                <div class="hud-item" id="hud-health">❤️ 100</div>
+                <div class="hud-item" id="hud-cash">💲 0</div>
+            </div>
+            <div class="hud-group">
+                <div class="hud-item" id="hud-wanted">
+                    <span class="star active">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                </div>
+            </div>
+        </div>
+        <div id="hud-message">Mission Started</div>
+        <div class="hud-bottom">
+            <div id="hud-objective-box">
+                <div id="hud-objective-title">Current Objective</div>
+                <div id="hud-objective">Explore Sunset City and stay out of trouble.</div>
+            </div>
+            <div class="hud-right-stack">
+                <div id="hud-speed">0 MPH</div>
+                <div id="minimap-container">
+                    <canvas id="hud-minimap" width="180" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
