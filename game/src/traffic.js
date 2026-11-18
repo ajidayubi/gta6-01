@@ -1,3 +1,11 @@
+/*
+ * Sunset City - TrafficSystem
+ * Ambient city traffic: 8 cars driving rectangular loop routes on the
+ * road grid, plus pedestrians wandering the sidewalks. Each car follows
+ * its assigned route corners and loops forever; pedestrians stroll and
+ * scatter when a car or the player gets too close. The player must
+ * dodge traffic while driving - collisions cost speed and hull.
+ */
 import * as THREE from 'three';
 import { buildCarMesh } from './vehicles.js';
 

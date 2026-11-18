@@ -1,3 +1,11 @@
+/*
+ * Sunset City - SoundSystem design notes
+ * Every sound in the game is synthesized live with the Web Audio API:
+ * the engine hum is two detuned sawtooths through a lowpass filter,
+ * the siren alternates two tones, and impacts are shaped noise bursts.
+ * No audio files are shipped; all methods are safe to call before the
+ * audio context exists (they no-op until the first user gesture).
+ */
 /**
  * Sunset City - Synthesized Audio System
  * Uses Web Audio API for programmatic sound effects and engine loops.
